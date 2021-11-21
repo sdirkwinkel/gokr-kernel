@@ -14,7 +14,7 @@ import (
 )
 
 // see https://www.kernel.org/releases.json
-var latest = "https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.15.3.tar.xz"
+var latest = "https://git.kernel.org/torvalds/t/linux-5.16-rc1.tar.gz"
 
 const configAddendum = `
 CONFIG_ARCH_BCM2835=y 
@@ -575,6 +575,12 @@ CONFIG_TULIP=y
 # CONFIG_TULIP_MMIO is not set
 CONFIG_WINBOND_840=y
 CONFIG_DM9102=y
+
+##
+## file: drivers/net/ethernet/realtek/Kconfig
+##
+CONFIG_NET_VENDOR_REALTEK=y
+CONFIG_R8169=y
 
 ##
 ## file: drivers/net/ethernet/dlink/Kconfig
@@ -1152,7 +1158,7 @@ func main() {
 		log.Fatalf("untar: %v", err)
 	}
 
-	srcdir := strings.TrimSuffix(filepath.Base(latest), ".tar.xz")
+	srcdir := strings.TrimSuffix(filepath.Base(latest), ".tar.gz")
 
 	log.Printf("applying patches")
 	if err := applyPatches(srcdir); err != nil {
@@ -1185,6 +1191,10 @@ func main() {
 	}
 
 	if err := copyFile("/tmp/buildresult/bcm2711-rpi-4-b.dtb", "arch/arm64/boot/dts/broadcom/bcm2711-rpi-4-b.dtb"); err != nil {
+		log.Fatal(err)
+	}
+
+	if err := copyFile("/tmp/buildresult/bcm2711-rpi-cm4-io.dtb", "arch/arm64/boot/dts/broadcom/bcm2711-rpi-cm4-io.dtb"); err != nil {
 		log.Fatal(err)
 	}
 }

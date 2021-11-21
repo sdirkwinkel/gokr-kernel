@@ -15,7 +15,7 @@ import (
 )
 
 const dockerFileContents = `
-FROM debian:stretch
+FROM debian:bullseye
 
 RUN apt-get update && apt-get install -y crossbuild-essential-arm64 bc libssl-dev bison flex
 
@@ -43,9 +43,6 @@ var dockerFileTmpl = template.Must(template.New("dockerfile").
 var patchFiles = []string{
 	"0001-Revert-add-index-to-the-ethernet-alias.patch",
 	// serial
-	"0101-expose-UART0-ttyAMA0-on-GPIO-14-15-disable-UART1-tty.patch",
-	"0102-expose-UART0-ttyAMA0-on-GPIO-14-15-disable-UART1-tty.patch",
-	"0103-expose-UART0-ttyAMA0-on-GPIO-14-15-disable-UART1-tty.patch",
 	// spi
 	"0201-enable-spidev.patch",
 	// logo
@@ -94,7 +91,7 @@ func find(filename string) (string, error) {
 		return filename, nil
 	}
 
-	path := filepath.Join(gopath, "src", "github.com", "gokrazy", "kernel", filename)
+	path := filepath.Join(gopath, "src", "github.com", "sdirkwinkel", "gokr-kernel", filename)
 	if _, err := os.Stat(path); err == nil {
 		return path, nil
 	}
@@ -142,7 +139,7 @@ func main() {
 	}
 	defer os.RemoveAll(tmp)
 
-	cmd := exec.Command("go", "install", "github.com/gokrazy/kernel/cmd/gokr-build-kernel")
+	cmd := exec.Command("go", "install", "github.com/sdirkwinkel/gokr-kernel/cmd/gokr-build-kernel")
 	cmd.Env = append(os.Environ(), "GOOS=linux", "GOBIN="+tmp)
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
@@ -181,6 +178,10 @@ func main() {
 		log.Fatal(err)
 	}
 	dtb4Path, err := find("bcm2711-rpi-4-b.dtb")
+	if err != nil {
+		log.Fatal(err)
+	}
+	dtbCM4Path, err := find("bcm2711-rpi-cm4-io.dtb")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -283,4 +284,7 @@ func main() {
 		log.Fatal(err)
 	}
 
+	if err := copyFile(dtbCM4Path, filepath.Join(tmp, "bcm2711-rpi-cm4-io.dtb")); err != nil {
+		log.Fatal(err)
+	}
 }
